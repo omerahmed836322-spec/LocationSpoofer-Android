@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" 
+    android:layout_height="match_parent"
+    android:orientation="vertical" 
+    android:padding="24dp" 
+    android:gravity="center">
+
+    <EditText 
+        android:id="@+id/etLat" 
+        android:layout_width="match_parent" 
+        android:layout_height="wrap_content" 
+        android:hint="Latitude (مثال: 24.7136)" 
+        android:inputType="numberDecimal|numberSigned" />
+
+    <EditText 
+        android:id="@+id/etLon" 
+        android:layout_width="match_parent" 
+        android:layout_height="wrap_content" 
+        android:hint="Longitude (مثال: 46.6753)" 
+        android:inputType="numberDecimal|numberSigned" 
+        android:layout_marginTop="16dp" />
+
+    <Button 
+        android:id="@+id/btnToggleSpoof" 
+        android:layout_width="match_parent" 
+        android:layout_height="wrap_content" 
+        android:text="تفعيل / إيقاف التزييف" 
+        android:layout_marginTop="24dp" />
+
+    <Button 
+        android:id="@+id/btnStartOverlay" 
+        android:layout_width="match_parent" 
+        android:layout_height="wrap_content" 
+        android:text="تشغيل الزر العائم (اضغط بـ 3 أصابع)" 
+        android:layout_marginTop="12dp" />
+
+</LinearLayout>
