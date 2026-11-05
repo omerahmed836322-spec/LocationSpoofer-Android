@@ -19,29 +19,14 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Auto-generate Gradle Wrapper (if missing)
-      run: |
-        if [ ! -f "gradlew" ]; then
-          echo "⚙️ Generating Gradle Wrapper automatically..."
-          mkdir -p gradle/wrapper
-          # تحميل سكريبت gradlew الرسمي من مستودع Gradle
-          curl -sL https://raw.githubusercontent.com/gradle/gradle/master/gradlew -o gradlew
-          chmod +x gradlew
-          # إنشاء ملف الإعدادات الخاص بـ Gradle
-          cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=https\://services.gradle.org/distributions/gradle-8.2-bin.zip
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-EOF
-          echo "✅ Gradle Wrapper generated successfully!"
-        else
-          chmod +x gradlew
-        fi
+    # الحل الذكي: استخدام Gradle Action الرسمي الذي لا يحتاج gradlew
+    - name: Setup Gradle (Auto-generates wrapper if missing)
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: '8.2'
 
     - name: Build with Gradle
-      run: ./gradlew assembleDebug --no-daemon --stacktrace
+      run: gradle assembleDebug --no-daemon --stacktrace
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
