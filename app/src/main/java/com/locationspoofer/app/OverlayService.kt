@@ -3,7 +3,6 @@ package com.locationspoofer.app
 import android.app.Service
 import android.content.Intent
 import android.graphics.PixelFormat
-import android.os.Handler
 import android.os.IBinder
 import android.view.Gravity
 import android.view.MotionEvent
@@ -14,9 +13,6 @@ import android.widget.Button
 class OverlayService : Service() {
     private lateinit var windowManager: WindowManager
     private lateinit var overlayView: View
-    private val handler = Handler()
-    private var touchStartTime = 0L
-    private var pointerCount = 0
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -27,10 +23,38 @@ class OverlayService : Service() {
         overlayView = Button(this).apply {
             text = "📍"
             textSize = 24f
-            setBackgroundColor(0x80000000.toInt()) // خلفية شبه شفافة
+            setBackgroundColor(0x80000000.toInt())
+            
+            // جعل الزر يعمل بالضغط العادي (ليس 3 أصابع)
+            setOnClickListener {
+                LocationEngine.isSpoofingEnabled = !LocationEngine.isSpoofingEnabled
+                alpha = if (LocationEngine.isSpoofingEnabled) 1.0f else 0.5f
+            }
+            
+            // إضافة إمكانية السحب
+            var initialX = 0
+            var initialY = 0
+            var initialTouchX = 0f
+            var initialTouchY = 0f
+            
             setOnTouchListener { _, event ->
-                handleTouch(event)
-                true
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        initialX = (layoutParams as WindowManager.LayoutParams).x
+                        initialY = (layoutParams as WindowManager.LayoutParams).y
+                        initialTouchX = event.rawX
+                        initialTouchY = event.rawY
+                        true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        val params = layoutParams as WindowManager.LayoutParams
+                        params.x = initialX + (event.rawX - initialTouchX).toInt()
+                        params.y = initialY + (event.rawY - initialTouchY).toInt()
+                        windowManager.updateViewLayout(overlayView, params)
+                        true
+                    }
+                    else -> false
+                }
             }
         }
 
@@ -48,33 +72,8 @@ class OverlayService : Service() {
         windowManager.addView(overlayView, params)
     }
 
-    private fun handleTouch(event: MotionEvent) {
-        when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
-                pointerCount = event.pointerCount
-                if (pointerCount >= 3) {
-                    touchStartTime = System.currentTimeMillis()
-                    handler.postDelayed({
-                        if (System.currentTimeMillis() - touchStartTime >= 800 && event.pointerCount >= 3) {
-                            LocationEngine.isSpoofingEnabled = !LocationEngine.isSpoofingEnabled
-                            overlayView.alpha = if (LocationEngine.isSpoofingEnabled) 1.0f else 0.3f
-                        }
-                    }, 800)
-                }
-            }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
-                handler.removeCallbacksAndMessages(null)
-                pointerCount = event.pointerCount
-            }
-            MotionEvent.ACTION_CANCEL -> {
-                handler.removeCallbacksAndMessages(null)
-            }
-        }
-    }
-
     override fun onDestroy() {
         super.onDestroy()
-        handler.removeCallbacksAndMessages(null)
         windowManager.removeView(overlayView)
     }
 }
