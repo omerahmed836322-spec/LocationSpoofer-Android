@@ -20,16 +20,11 @@ class MainActivity : AppCompatActivity() {
         val etLat = findViewById<EditText>(R.id.etLat)
         val etLon = findViewById<EditText>(R.id.etLon)
 
+        // تشغيل الزر العائم تلقائياً عند فتح التطبيق
+        startOverlayService()
+
         btnStartOverlay.setOnClickListener {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (!Settings.canDrawOverlays(this)) {
-                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-                    startActivity(intent)
-                    return@setOnClickListener
-                }
-            }
-            startService(Intent(this, OverlayService::class.java))
-            Toast.makeText(this, "تم تشغيل الزر العائم. اضغط بـ 3 أصابع للتفعيل", Toast.LENGTH_LONG).show()
+            startOverlayService()
         }
 
         btnToggleSpoof.setOnClickListener {
@@ -39,6 +34,24 @@ class MainActivity : AppCompatActivity() {
             
             val status = if (LocationEngine.isSpoofingEnabled) "مفعل ✅" else "معطل ❌"
             Toast.makeText(this, "حالة التزييف: $status", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun startOverlayService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+                startActivity(intent)
+                Toast.makeText(this, "يرجى تفعيل إذن الرسم فوق التطبيقات", Toast.LENGTH_LONG).show()
+                return
+            }
+        }
+        
+        try {
+            startService(Intent(this, OverlayService::class.java))
+            Toast.makeText(this, "الزر العائم يعمل الآن", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "خطأ: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 }
