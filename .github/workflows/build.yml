@@ -18,13 +18,29 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle # لتسريع عمليات البناء المستقبلية
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+    - name: Auto-generate Gradle Wrapper (if missing)
+      run: |
+        if [ ! -f "gradlew" ]; then
+          echo "⚙️ Generating Gradle Wrapper automatically..."
+          mkdir -p gradle/wrapper
+          # تحميل سكريبت gradlew الرسمي من مستودع Gradle
+          curl -sL https://raw.githubusercontent.com/gradle/gradle/master/gradlew -o gradlew
+          chmod +x gradlew
+          # إنشاء ملف الإعدادات الخاص بـ Gradle
+          cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.2-bin.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+EOF
+          echo "✅ Gradle Wrapper generated successfully!"
+        else
+          chmod +x gradlew
+        fi
 
     - name: Build with Gradle
-      # إضافة --no-daemon و --stacktrace لضمان الاستقرار وإظهار الأخطاء بوضوح إذا وجدت
       run: ./gradlew assembleDebug --no-daemon --stacktrace
 
     - name: Upload APK Artifact
@@ -32,4 +48,4 @@ jobs:
       with:
         name: LocationSpoofer-Debug-APK
         path: app/build/outputs/apk/debug/app-debug.apk
-        if-no-files-found: error # لإبلاغنا فوراً إذا فشل إنشاء ملف الـ APK
+        if-no-files-found: error
